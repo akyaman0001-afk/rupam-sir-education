@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rupam Sir - Mega Test Portal</title>
+    <style>
+        * { margin:0; padding:0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: #f0f4f8; display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 280px; background: #002147; color: white; padding: 30px; position: fixed; height: 100%; border-right: 5px solid #ffce00; }
+        .sidebar h1 { font-size: 24px; color: #ffce00; margin-bottom: 10px; }
+        .sidebar p { font-size: 14px; opacity: 0.8; }
+
+        /* Main Content */
+        .main-content { margin-left: 280px; padding: 40px; width: 100%; display:none; }
+
+        /* Verification Wall */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center;
+        }
+        .lock-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); max-width: 500px; border-top: 8px solid #ff0000; }
+        .sub-btn { background: #ff0000; color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; margin: 20px 0; }
+        
+        /* Grid Design */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; text-align: center; cursor: pointer; border: 2px solid #ddd; transition: 0.3s; font-weight: bold; }
+        .card:hover { border-color: #002147; background: #002147; color: white; transform: scale(1.05); }
+
+        /* Quiz UI */
+        #quiz-box { display: none; background: white; padding: 40px; border-radius: 20px; max-width: 700px; margin: 0 auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .opt-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; }
+        .opt-btn:hover { background: #eef2f3; }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="lock-screen">
+        <div class="lock-box">
+            <h1 style="color:#ff0000;">RUPAM SIR ACADEMY</h1>
+            <p>Pehle Subscribe karein aur Screenshot upload karein.</p>
+            <a href="https://youtube.com/@rupamsir3098?si=Yu-n2acY7pLMEK9M" target="_blank" class="sub-btn">SUBSCRIBE NOW 🔴</a>
+            <div style="border: 2px dashed #ccc; padding: 20px; border-radius: 10px;">
+                <input type="file" id="proof" onchange="document.getElementById('entry-btn').disabled=false; document.getElementById('entry-btn').style.opacity=1;">
+            </div>
+            <button id="entry-btn" onclick="startPortal()" disabled style="margin-top:20px; padding:10px 30px; opacity:0.5; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">ENTER PORTAL</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <h1>RUPAM SIR</h1>
+        <p>Aman Teach World Special</p>
+        <button onclick="location.reload()" style="margin-top:20px; padding:5px 10px; cursor:pointer;">Home Page</button>
+    </div>
+
+    <div class="main-content" id="main-ui">
+        
+        <div id="step-class">
+            <h2 style="border-left: 5px solid #002147; padding-left: 10px;">Apni Class Chunein:</h2>
+            <div class="grid">
+                <div class="card" onclick="selectClass('6')">Class 6</div>
+                <div class="card" onclick="selectClass('7')">Class 7</div>
+                <div class="card" onclick="selectClass('8')">Class 8</div>
+                <div class="card" onclick="selectClass('9')">Class 9</div>
+                <div class="card" onclick="selectClass('10')">Class 10</div>
+            </div>
+        </div>
+
+        <div id="step-subject" class="hidden">
+            <h2 id="selected-class-title"></h2>
+            <p>Ab vishay (Subject) chunein:</p>
+            <div class="grid">
+                <div class="card" onclick="startQuiz('Vigyan')">Vigyan (Science)</div>
+                <div class="card" onclick="startQuiz('Ganit')">Ganit (Maths)</div>
+                <div class="card" onclick="startQuiz('Samajik')">Samajik Vigyan (SST)</div>
+                <div class="card" onclick="startQuiz('Hindi')">Hindi</div>
+            </div>
+        </div>
+
+        <div id="quiz-box">
+            <h2 id="q-header" style="color:#002147;"></h2>
+            <hr><br>
+            <p id="q-text" style="font-size:20px; font-weight:bold;"></p>
+            <div id="options"></div>
+            <p id="progress" style="margin-top:20px; font-size:12px; color:gray;"></p>
+        </div>
+
+        <div id="result" class="hidden" style="text-align:center;">
+            <h1>Aapka Result: <span id="score" style="color:#28a745;"></span></h1>
+            <p id="feedback" style="margin:20px 0; font-size:18px;"></p>
+            <button onclick="location.reload()" style="padding:10px 20px; background:#002147; color:white; border:none; border-radius:5px; cursor:pointer;">Mukhya Prishth par Jayein</button>
+        </div>
+
+    </div>
+
+    <script>
+        let myClass = "", mySub = "", score = 0, currentQ = 0;
+
+        // Har Class aur Subject ke liye alag sawal yahan add kar sakte hain
+        const questions = {
+            "Vigyan": [
+                {q: "Suryamandal ka sabse garm grah kaunsa hai?", a: ["Mercury", "Venus", "Mars", "Jupiter"], c: 1},
+                {q: "Pani ka chemical formula kya hai?", a: ["H2O", "CO2", "O2", "NaCl"], c: 0}
+            ],
+            "Ganit": [
+                {q: "Ek varg (Square) ki kitni bhujaein hoti hain?", a: ["3", "4", "5", "6"], c: 1},
+                {q: "100 ka aadha kitna hota hai?", a: ["25", "50", "75", "10"], c: 1}
+            ],
+            "Samajik": [
+                {q: "Bharat kab azad hua?", a: ["1942", "1947", "1950", "1930"], c: 1}
+            ],
+            "Hindi": [
+                {q: "Rastrabhasha Hindi ki lipi kya hai?", a: ["Roman", "Devnagri", "Pali", "Arbi"], c: 1}
+            ]
+        };
+
+        function startPortal() {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+        }
+
+        function selectClass(c) {
+            myClass = c;
+            document.getElementById('step-class').classList.add('hidden');
+            document.getElementById('step-subject').classList.remove('hidden');
+            document.getElementById('selected-class-title').innerText = "Class " + c + " Dashboard";
+        }
+
+        function startQuiz(s) {
+            mySub = s;
+            document.getElementById('step-subject').classList.add('hidden');
+            document.getElementById('quiz-box').style.display = 'block';
+            document.getElementById('q-header').innerText = mySub + " Test (Class " + myClass + ")";
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            let data = questions[mySub];
+            if(currentQ < data.length) {
+                document.getElementById('q-text').innerText = data[currentQ].q;
+                document.getElementById('progress').innerText = `Sawal ${currentQ+1} / ${data.length}`;
+                let html = "";
+                data[currentQ].a.forEach((opt, i) => {
+                    html += `<button class="opt-btn" onclick="checkAnswer(${i})">${opt}</button>`;
+                });
+                document.getElementById('options').innerHTML = html;
+            } else {
+                showResult();
+            }
+        }
+
+        function checkAnswer(i) {
+            if(i === questions[mySub][currentQ].c) score++;
+            currentQ++;
+            loadQuestion();
+        }
+
+        function showResult() {
+            document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('score').innerText = `${score} / ${questions[mySub].length}`;
+            document.getElementById('feedback').innerText = score > 0 ? "Shabash! Rupam Sir ke channel se padhte rahein." : "Thoda aur padhne ki zarurat hai.";
+        }
+    </script>
+</body>
+</html>
